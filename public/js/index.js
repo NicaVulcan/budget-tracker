@@ -140,8 +140,8 @@ function sendTransaction(isAdding) {
     saveRecord(transaction);
 
     // clear form
-    // nameEl.value = "";
-    // amountEl.value = "";
+    nameEl.value = "";
+    amountEl.value = "";
   });
 }
 
