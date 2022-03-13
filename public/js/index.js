@@ -1,28 +1,28 @@
 let transactions = [];
 let myChart;
 
-fetch("/api/transaction")
-  .then(response => {
-    return response.json();
-  })
-  .then(data => {
-    // save db data on global variable
-    transactions = data;
+// fetch("/api/transaction")
+//   .then(response => {
+//     return response.json();
+//   })
+//   .then(data => {
+//     // save db data on global variable
+//     transactions = data;
 
-    populateTotal();
-    populateTable();
-    populateChart();
-  });
+//     populateTotal();
+//     populateTable();
+//     populateChart();
+//   });
 
-function populateTotal() {
-  // reduce transaction amounts to a single total value
-  let total = transactions.reduce((total, t) => {
-    return total + parseInt(t.value);
-  }, 0);
+// function populateTotal() {
+//   // reduce transaction amounts to a single total value
+//   let total = transactions.reduce((total, t) => {
+//     return total + parseInt(t.value);
+//   }, 0);
 
-  let totalEl = document.querySelector("#total");
-  totalEl.textContent = total;
-}
+//   let totalEl = document.querySelector("#total");
+//   totalEl.textContent = total;
+// }
 
 function populateTable() {
   let tbody = document.querySelector("#tbody");
@@ -113,36 +113,36 @@ function sendTransaction(isAdding) {
   populateTotal();
   
   // also send to server
-  fetch("/api/transaction", {
-    method: "POST",
-    body: JSON.stringify(transaction),
-    headers: {
-      Accept: "application/json, text/plain, */*",
-      "Content-Type": "application/json"
-    }
-  })
-  .then(response => {    
-    return response.json();
-  })
-  .then(data => {
-    if (data.errors) {
-      errorEl.textContent = "Missing Information";
-    }
-    else {
-      // clear form
-      nameEl.value = "";
-      amountEl.value = "";
-    }
-  })
-  .catch(err => {
-    // fetch failed, so save in indexed db
-    console.log(transaction)
-    saveRecord(transaction);
+  // fetch("/api/transaction", {
+  //   method: "POST",
+  //   body: JSON.stringify(transaction),
+  //   headers: {
+  //     Accept: "application/json, text/plain, */*",
+  //     "Content-Type": "application/json"
+  //   }
+  // })
+  // .then(response => {    
+  //   return response.json();
+  // })
+  // .then(data => {
+  //   if (data.errors) {
+  //     errorEl.textContent = "Missing Information";
+  //   }
+  //   else {
+  //     // clear form
+  //     nameEl.value = "";
+  //     amountEl.value = "";
+  //   }
+  // })
+  // .catch(err => {
+  //   // fetch failed, so save in indexed db
+  //   console.log(transaction)
+  //   saveRecord(transaction);
 
-    // clear form
-    nameEl.value = "";
-    amountEl.value = "";
-  });
+  //   // clear form
+  //   nameEl.value = "";
+  //   amountEl.value = "";
+  // });
 }
 
 document.querySelector("#add-btn").onclick = function() {
