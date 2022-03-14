@@ -1,60 +1,98 @@
 const APP_PREFIX = 'BudgetTracker-';
 const VERSION = 'version_01';
-const CACHE_NAME = APP_PREFIX + VERSION;
+const STATIC_CACHE = APP_PREFIX + VERSION;
+const RUNTIME_CACHE = "data-cache-" + VERSION;
 
 const FILES_TO_CACHE = [
-    '/public/index.html',
-    '/public/js/index.js',
-    '/public/css/styles.css',
-    '/public/idb.js',
-    '/public/manifest.json',
-    '/public/icons/icon-72x72.png',
-    '/public/icon-96x96.png',
-    '/public/icon-128x128.png',
-    '/public/icon-144x144.png',
-    '/public/icon-152x152.png',
-    '/public/icon-192x192.png',
-    '/public/icon-384x384.png',
-    '/public/icon-512x512.png'
+    '/',
+    '/index.html',
+    '/js/index.js',
+    '/css/styles.css',
+    '/idb.js',
+    '/manifest.json',
+    '/icons/icon-72x72.png',
+    '/icons/icon-96x96.png',
+    '/icons/icon-128x128.png',
+    '/icons/icon-144x144.png',
+    '/icons/icon-152x152.png',
+    '/icons/icon-192x192.png',
+    '/icons/icon-384x384.png',
+    '/icons/icon-512x512.png'
 ];
 
-self.addEventListener('install', function (e) {
-    e.waitUntil(
-        caches.open(CACHE_NAME).then(function (cache) {
-            console.log('installing cache : ' + CACHE_NAME)
-            return cache.addAll(FILES_TO_CACHE);
-        })
-    );
-});
 
-self.addEventListener('activate', function (e) {
-    e.waitUntil(
-        caches.keys().then(function (keyList) {
-            let cacheKeeplist = keyList.filter(function (key) {
-                return key.indexOf(APP_PREFIX);
+self.addEventListener("install", event => {
+    event.waitUntil(
+      caches
+        .open(STATIC_CACHE)
+        .then(cache => cache.addAll(FILES_TO_CACHE))
+        .then(() => self.skipWaiting())
+    );
+  });
+  
+  // The activate handler takes care of cleaning up old caches.
+  self.addEventListener("activate", event => {
+    const currentCaches = [STATIC_CACHE, RUNTIME_CACHE];
+    event.waitUntil(
+      caches
+        .keys()
+        .then(cacheNames => {
+          // return array of cache names that are old to delete
+          return cacheNames.filter(
+            cacheName => !currentCaches.includes(cacheName)
+          );
+        })
+        .then(cachesToDelete => {
+          return Promise.all(
+            cachesToDelete.map(cacheToDelete => {
+              return caches.delete(cacheToDelete);
+            })
+          );
+        })
+        .then(() => self.clients.claim())
+    );
+  });
+  
+  self.addEventListener("fetch", event => {
+    // non GET requests are not cached and requests to other origins are not cached
+    if (
+      !event.request.url.startsWith(self.location.origin)
+    ) {
+      event.respondWith(fetch(event.request));
+      return;
+    }
+  
+    // handle runtime requests for data from /api routes
+    if (event.request.url.includes("/api/transaction")) {
+      // make network request and fallback to cache if network request fails (offline)
+      event.respondWith(
+        caches.open(RUNTIME_CACHE).then(cache => {
+          return fetch(event.request)
+            .then(response => {
+              cache.put(event.request, response.clone());
+              return response;
+            })
+            .catch(() => caches.match(event.request));
+        })
+      );
+      return;
+    }
+  
+    // use cache first for all other requests for performance
+    event.respondWith(
+      caches.match(event.request).then(cachedResponse => {
+        if (cachedResponse) {
+          return cachedResponse;
+        }
+  
+        // request is not in cache. make network request and cache the response
+        return caches.open(RUNTIME_CACHE).then(cache => {
+          return fetch(event.request).then(response => {
+            return cache.put(event.request, response.clone()).then(() => {
+              return response;
             });
-            cacheKeeplist.push(CACHE_NAME);
-            return Promise.all(keyList.map(function (key, i) {
-                if(cacheKeeplist.indexOf(key) === 1) {
-                    console.log('deleting cache : ' + keyList[i]);
-                    return caches.delete(keyList[1]);
-                }
-            }));
-        })
+          });
+        });
+      })
     );
-});
-
-self.addEventListener('fetch', function (e) {
-    console.log('fecth request : ' + e.request.url);
-    e.respondWith(
-        caches.match(e.request).then(function (request) {
-            if (request) {
-                console.log('responding with cache : ' + e.request.url);
-                return request;
-            } else {
-                console.log('file is not cached, fetching : ' + e.request.url);
-                return fetch(e.request);
-            }
-        })
-    );
-});
+  });

@@ -4,8 +4,7 @@
     "description": "App for tracking transactions",
     "theme_color": "#09bab7",
     "background_color": "#05615f",
-    "start_url": "/index.html",
-    "id": "/index.html",
+    "start_url": "/",
     "display": "standalone",
     "icons": [
         {
