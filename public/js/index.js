@@ -71,7 +71,7 @@ function populateChart() {
         datasets: [{
             label: "Total Over Time",
             fill: true,
-            backgroundColor: "#6666ff",
+            backgroundColor: "#CBF3F0",
             data
         }]
     }
@@ -82,6 +82,8 @@ function sendTransaction(isAdding) {
   let nameEl = document.querySelector("#t-name");
   let amountEl = document.querySelector("#t-amount");
   let errorEl = document.querySelector(".form .error");
+  let notificationModal = document.getElementById("notification");
+  let okBtn = document.getElementById("modal-ok-Btn");
 
   // validate form
   if (nameEl.value === "" || amountEl.value === "") {
@@ -136,8 +138,13 @@ function sendTransaction(isAdding) {
   })
   .catch(err => {
     // fetch failed, so save in indexed db
-    console.log(transaction)
     saveRecord(transaction);
+    notificationModal.showModal();
+    if (notificationModal.open) {
+      okBtn.addEventListener('click', function (event) {
+        notificationModal.close();
+      })
+    }
 
     // clear form
     nameEl.value = "";
