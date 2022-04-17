@@ -139,12 +139,10 @@ function sendTransaction(isAdding) {
   .catch(err => {
     // fetch failed, so save in indexed db
     saveRecord(transaction);
-    notificationModal.showModal();
-    if (notificationModal.open) {
-      okBtn.addEventListener('click', function (event) {
-        notificationModal.close();
-      })
-    }
+    notificationModal.style.display = "block";
+    okBtn.addEventListener('click', function (event) {
+      notificationModal.style.display = "none";
+    });
 
     // clear form
     nameEl.value = "";
